@@ -184,6 +184,7 @@
 					</execution>
 				</executions>
 				<configuration>
+					<jvmTarget>${java.version}</jvmTarget>
 					<args>
 						<arg>-Xjsr305=strict</arg>
 						<arg>-Xannotation-default-target=param-property</arg>
