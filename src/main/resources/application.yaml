@@ -43,3 +43,12 @@ ezpos:
 snowflake:
   machine-id: ${EZPOS_SNOWFLAKE_MACHINE_ID:1}
   epoch: ${EZPOS_SNOWFLAKE_EPOCH:1735689600000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
