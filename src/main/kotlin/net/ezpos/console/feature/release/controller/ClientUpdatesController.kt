@@ -1,5 +1,9 @@
 package net.ezpos.console.feature.release.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.security.SecurityRequirements
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import net.ezpos.console.feature.release.dto.ClientUpdateCheckResponse
 import net.ezpos.console.feature.release.dto.ClientUpdateReportRequest
@@ -22,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController
  * 该接口面向客户端调用，采用请求头传递维度信息（应用、平台、当前版本、租户、可选设备 id）。
  * 具体的版本比较与灰度命中判定由 [ClientUpdateService] 完成。
  */
+@Tag(name = "客户端更新", description = "客户端检查更新与更新状态上报")
 @RestController
 @RequestMapping("/api/client-updates")
 class ClientUpdatesController(
@@ -38,13 +43,15 @@ class ClientUpdatesController(
      * - `X-Tenant-Id`: 租户 id
      * - `X-Device-Id`: 设备 id（可选）
      */
+    @Operation(summary = "检查更新")
+    @SecurityRequirements
     @GetMapping("/check")
     fun check(
-        @RequestHeader("X-App-Code") appCode: String,
-        @RequestHeader("X-Platform") platform: String,
-        @RequestHeader("X-Current-Version") currentVersion: String,
-        @RequestHeader("X-Tenant-Id") tenantId: String,
-        @RequestHeader(name = "X-Device-Id", required = false) deviceId: String?,
+        @Parameter(description = "应用编码") @RequestHeader("X-App-Code") appCode: String,
+        @Parameter(description = "平台标识") @RequestHeader("X-Platform") platform: String,
+        @Parameter(description = "当前版本号") @RequestHeader("X-Current-Version") currentVersion: String,
+        @Parameter(description = "租户 ID") @RequestHeader("X-Tenant-Id") tenantId: String,
+        @Parameter(description = "设备 ID") @RequestHeader(name = "X-Device-Id", required = false) deviceId: String?,
     ): ClientUpdateCheckResponse =
         clientUpdateService.check(
             appCode = appCode,
@@ -59,10 +66,11 @@ class ClientUpdatesController(
      *
      * 客户端在执行更新过程中调用此接口上报进度/结果（downloaded / installed / failed）。
      */
+    @Operation(summary = "上报更新状态")
+    @SecurityRequirements
     @PostMapping("/report")
     @ResponseStatus(HttpStatus.CREATED)
     fun report(@Valid @RequestBody request: ClientUpdateReportRequest) {
         clientUpdateReportService.save(request)
     }
 }
-
