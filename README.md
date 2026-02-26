@@ -106,15 +106,23 @@ spring:
 
 3. **常见问题**
 
-   - **启动报 `missing table`**：说明 Flyway 迁移未执行到对应版本。检查数据库中 `flyway_schema_history` 表，确认迁移记录是否完整：
-     ```sql
-     SELECT installed_rank, version, description, success FROM flyway_schema_history ORDER BY installed_rank;
-     ```
-     如果某条记录 `success = false`，删除该失败记录后重启应用即可：
-     ```sql
-     DELETE FROM flyway_schema_history WHERE success = false;
-     ```
-   - **`ddl-auto` 说明**：开发环境默认 `ddl-auto: update`（Hibernate 自动补列），生产环境应使用 `validate`（仅校验，不修改 schema），由 Flyway 作为 schema 唯一来源。
+   - **启动报 `missing table`**：
+     - **最常见原因**：`application-dev.yaml` 中 `ddl-auto` 被设为 `validate`，Hibernate 启动时校验 schema 但数据库中缺少对应的表。将其改为 `update` 即可：
+       ```yaml
+       spring:
+         jpa:
+           hibernate:
+             ddl-auto: update
+       ```
+     - **Flyway 迁移未执行**：检查数据库中 `flyway_schema_history` 表，确认迁移记录是否完整：
+       ```sql
+       SELECT installed_rank, version, description, success FROM flyway_schema_history ORDER BY installed_rank;
+       ```
+       如果某条记录 `success = false`，删除该失败记录后重启应用即可：
+       ```sql
+       DELETE FROM flyway_schema_history WHERE success = false;
+       ```
+   - **`ddl-auto` 说明**：开发环境使用 `update`（Hibernate 自动补建缺失的表和列），生产环境应使用 `validate`（仅校验，不修改 schema），由 Flyway 作为 schema 唯一来源。
 
 ### 启动命令
 
