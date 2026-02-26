@@ -181,7 +181,7 @@ README 中的示例 `application-dev.yaml` 与仓库实际文件不同：
 |--------|-------------|----------------------------|
 | `username` | `postgres` | `root` |
 | `password` | `123456` | `root` |
-| `ddl-auto` | `update` | `validate` |
+| `ddl-auto` | `update` | `update` |
 | `logging.level.org.hibernate.SQL` | `WARN` | `DEBUG` |
 
 建议同步 README 或标注"仅为示例"。

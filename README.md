@@ -45,28 +45,38 @@
 开发环境建议在 `src/main/resources/application-dev.yaml` 中配置本地依赖（数据库等）。
 
 - PostgreSQL：`jdbc:postgresql://localhost:5432/ezpos`
-- 用户名/密码：`postgres` / `123456`
+- 用户名/密码：`root` / `root`（根据本地数据库实际配置修改）
 - JPA：`ddl-auto: update`
 
-示例 `application-dev.yaml`（可直接复制）：
+示例 `application-dev.yaml`（可直接复制，按需修改数据库账号密码）：
 
 ```yaml
 # 开发环境配置
 # 继承 application.yaml 的公共配置，这里只配置开发环境特有的部分
 logging:
   level:
-    org.hibernate.SQL: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.type.descriptor: TRACE
 
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/ezpos
-    username: postgres
-    password: 123456
+    username: root
+    password: root
 
   jpa:
-    show-sql: false
+    show-sql: true
     hibernate:
       ddl-auto: update
+
+  data:
+    redis:
+      password: root
+
+  sql:
+    init:
+      mode: never
 ```
 
 说明：
