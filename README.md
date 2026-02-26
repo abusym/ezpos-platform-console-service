@@ -78,9 +78,43 @@ spring:
 
 ### 依赖准备
 
-- PostgreSQL（创建数据库：`ezpos`）
+- PostgreSQL（默认端口 `5432`）
 - Redis（默认端口 `6379`）
 - Java 24
+
+### 数据库初始化
+
+1. **创建数据库**
+
+   ```sql
+   CREATE DATABASE ezpos;
+   ```
+
+2. **Flyway 自动迁移**
+
+   项目使用 Flyway 管理数据库 schema，应用启动时会自动执行 `src/main/resources/db/migration/` 下的所有未应用迁移脚本，无需手动建表。
+
+   当前迁移版本：
+
+   | 版本 | 说明 |
+   |------|------|
+   | V1 | 初始化：platform_users、console_release_applications、console_releases |
+   | V2 | 客户端更新上报：client_update_reports |
+   | V3 | 商家管理：merchants |
+   | V4 | 套餐与订阅：plans、subscriptions |
+   | V5 | 数据迁移与审计日志：data_migrations、audit_logs |
+
+3. **常见问题**
+
+   - **启动报 `missing table`**：说明 Flyway 迁移未执行到对应版本。检查数据库中 `flyway_schema_history` 表，确认迁移记录是否完整：
+     ```sql
+     SELECT installed_rank, version, description, success FROM flyway_schema_history ORDER BY installed_rank;
+     ```
+     如果某条记录 `success = false`，删除该失败记录后重启应用即可：
+     ```sql
+     DELETE FROM flyway_schema_history WHERE success = false;
+     ```
+   - **`ddl-auto` 说明**：开发环境默认 `ddl-auto: update`（Hibernate 自动补列），生产环境应使用 `validate`（仅校验，不修改 schema），由 Flyway 作为 schema 唯一来源。
 
 ### 启动命令
 
