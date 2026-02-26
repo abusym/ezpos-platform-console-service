@@ -1,14 +1,14 @@
 package net.ezpos.console.feature.release.service
 
+import net.ezpos.console.common.exception.EntityAlreadyExistsException
+import net.ezpos.console.common.exception.EntityNotFoundException
 import net.ezpos.console.feature.release.dto.CreateReleaseApplicationRequest
 import net.ezpos.console.feature.release.dto.ReleaseApplicationDto
 import net.ezpos.console.feature.release.dto.UpdateReleaseApplicationRequest
 import net.ezpos.console.feature.release.entity.ReleaseApplication
 import net.ezpos.console.feature.release.mapper.ReleaseApplicationMapper
 import net.ezpos.console.feature.release.repository.ReleaseApplicationRepository
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.web.server.ResponseStatusException
 
 /**
  * 可发布应用（Release Application）相关的业务服务。
@@ -33,22 +33,22 @@ class ReleaseApplicationService(
     /**
      * 按应用编码查询。
      *
-     * @throws ResponseStatusException 404 当应用不存在时抛出
+     * @throws EntityNotFoundException 当应用不存在时抛出
      */
     fun getByCode(code: String): ReleaseApplicationDto =
         repo.findByCode(code.trim())
             ?.let { toDto(it) }
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found: $code")
+            ?: throw EntityNotFoundException("Application", code)
 
     /**
      * 创建新的可发布应用。
      *
-     * @throws ResponseStatusException 409 当 `code` 已存在时抛出
+     * @throws EntityAlreadyExistsException 当 `code` 已存在时抛出
      */
     fun create(request: CreateReleaseApplicationRequest): ReleaseApplicationDto {
         val code = request.code.trim()
         if (repo.existsByCode(code)) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "Application code already exists: $code")
+            throw EntityAlreadyExistsException("Application code already exists: $code")
         }
         val app = ReleaseApplication(
             code = code,
@@ -62,11 +62,11 @@ class ReleaseApplicationService(
     /**
      * 按应用编码局部更新应用信息。
      *
-     * @throws ResponseStatusException 404 当应用不存在时抛出
+     * @throws EntityNotFoundException 当应用不存在时抛出
      */
     fun update(code: String, request: UpdateReleaseApplicationRequest): ReleaseApplicationDto {
         val app = repo.findByCode(code.trim())
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found: $code")
+            ?: throw EntityNotFoundException("Application", code)
 
         request.name?.let { app.name = it.trim() }
         if (request.description != null) {
@@ -82,14 +82,13 @@ class ReleaseApplicationService(
      *
      * 该方法常用于发布/客户端检查更新等流程中，确保对外生效的发布配置一定归属于启用应用。
      *
-     * @throws ResponseStatusException 404 当应用不存在或已禁用时抛出
+     * @throws EntityNotFoundException 当应用不存在或已禁用时抛出
      */
     fun requireEnabled(code: String): ReleaseApplication =
         repo.findByCode(code.trim())
             ?.takeIf { it.enabled }
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found or disabled: $code")
+            ?: throw EntityNotFoundException("Application", code)
 
     private fun toDto(app: ReleaseApplication): ReleaseApplicationDto =
         mapper.toDto(requireNotNull(app.id), app)
 }
-

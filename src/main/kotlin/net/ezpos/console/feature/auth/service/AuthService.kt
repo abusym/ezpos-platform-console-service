@@ -1,16 +1,15 @@
 package net.ezpos.console.feature.auth.service
 
+import net.ezpos.console.common.exception.AuthenticationFailedException
 import net.ezpos.console.common.security.current.CurrentPrincipalProvider
-import net.ezpos.console.feature.auth.mapper.PlatformUserInfoMapper
 import net.ezpos.console.feature.auth.dto.LoginRequest
 import net.ezpos.console.feature.auth.dto.LoginResponse
 import net.ezpos.console.feature.auth.dto.PlatformUserInfo
+import net.ezpos.console.feature.auth.mapper.PlatformUserInfoMapper
 import net.ezpos.console.feature.auth.token.OpaqueTokenService
 import net.ezpos.console.feature.user.repository.PlatformUserRepository
-import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import org.springframework.web.server.ResponseStatusException
 
 @Service
 class AuthService(
@@ -22,14 +21,14 @@ class AuthService(
 ) {
     fun login(request: LoginRequest): LoginResponse {
         val user = repo.findByUsername(request.username)
-            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials")
+            ?: throw AuthenticationFailedException("Invalid credentials")
 
         if (!user.enabled) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "User disabled")
+            throw AuthenticationFailedException("User disabled")
         }
 
         if (!passwordEncoder.matches(request.password, user.passwordHash)) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials")
+            throw AuthenticationFailedException("Invalid credentials")
         }
 
         val accessToken = tokenService.issueAccessToken(requireNotNull(user.id))
@@ -51,4 +50,3 @@ class AuthService(
         return userInfoMapper.fromPrincipalAndUser(principal, user)
     }
 }
-
