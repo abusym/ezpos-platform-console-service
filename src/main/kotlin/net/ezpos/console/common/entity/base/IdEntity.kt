@@ -14,8 +14,7 @@ import java.time.OffsetDateTime
  *
  * ## 设计要点
  * - **统一主键策略**：使用 Snowflake 生成的 `Long` 类型 ID，避免数据库自增 ID 在分库分表/多实例下的协调成本。
- * - **字段访问（FIELD access）**：通过 `@Access(AccessType.FIELD)` 强制 Hibernate 直接操作字段，
- *   以支持 `val id: Long? = null` 这类“只读属性 + 由 ORM 回填”的写法。
+ * - **字段访问（FIELD access）**：通过 `@Access(AccessType.FIELD)` 强制 Hibernate 直接操作字段。
  *
  * ## 使用方式
  * 业务实体继承本类即可获得：
@@ -37,7 +36,7 @@ abstract class IdEntity {
     @Id
     @SnowflakeId
     @Column(name = "id", nullable = false, updatable = false)
-    val id: Long? = null
+    var id: Long? = null
 
     /**
      * 记录创建时间（带时区）。

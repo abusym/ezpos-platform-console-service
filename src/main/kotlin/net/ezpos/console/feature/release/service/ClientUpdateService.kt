@@ -7,6 +7,7 @@ import net.ezpos.console.feature.release.model.ReleaseStatus
 import net.ezpos.console.feature.release.model.SemVer
 import net.ezpos.console.feature.release.repository.ReleaseRepository
 import org.springframework.stereotype.Service
+import java.time.OffsetDateTime
 
 /**
  * 客户端更新检查服务。
@@ -59,8 +60,9 @@ class ClientUpdateService(
         val minSupported = SemVer.parse(release.minSupportedVersion)
             ?: throw DataIntegrityException("Invalid release.minSupportedVersion")
 
-        val url = release.artifactUrl?.takeIf { it.isNotBlank() }
-            ?: throw DataIntegrityException("Release artifactUrl is not set")
+        val downloadUrl = release.artifactUrl?.takeIf { it.isNotBlank() }
+            ?: release.artifactKey?.takeIf { it.isNotBlank() }
+            ?: throw DataIntegrityException("Release has no download information (neither artifactUrl nor artifactKey)")
 
         val forcedByMinSupported = current < minSupported
         if (forcedByMinSupported) {
@@ -73,7 +75,7 @@ class ClientUpdateService(
                 forceAfterAt = release.forceAfterAt,
                 releaseNotes = release.releaseNotes,
                 download = ClientUpdateCheckResponse.DownloadInfo(
-                    url = url,
+                    url = downloadUrl,
                     sha256 = release.sha256,
                     fileSize = release.fileSize,
                 ),
@@ -89,16 +91,19 @@ class ClientUpdateService(
             return ClientUpdateCheckResponse(updateAvailable = false)
         }
 
+        val isForced = release.isForced ||
+            (release.forceAfterAt != null && OffsetDateTime.now() >= release.forceAfterAt)
+
         return ClientUpdateCheckResponse(
             updateAvailable = true,
             releaseId = requireNotNull(release.id),
             latestVersion = latest.toString(),
             minSupportedVersion = minSupported.toString(),
-            isForced = release.isForced,
+            isForced = isForced,
             forceAfterAt = release.forceAfterAt,
             releaseNotes = release.releaseNotes,
             download = ClientUpdateCheckResponse.DownloadInfo(
-                url = url,
+                url = downloadUrl,
                 sha256 = release.sha256,
                 fileSize = release.fileSize,
             ),

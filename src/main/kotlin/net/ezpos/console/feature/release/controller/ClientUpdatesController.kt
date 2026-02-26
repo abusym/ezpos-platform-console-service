@@ -1,10 +1,17 @@
 package net.ezpos.console.feature.release.controller
 
+import jakarta.validation.Valid
 import net.ezpos.console.feature.release.dto.ClientUpdateCheckResponse
+import net.ezpos.console.feature.release.dto.ClientUpdateReportRequest
+import net.ezpos.console.feature.release.service.ClientUpdateReportService
 import net.ezpos.console.feature.release.service.ClientUpdateService
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 /**
@@ -19,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/client-updates")
 class ClientUpdatesController(
     private val clientUpdateService: ClientUpdateService,
+    private val clientUpdateReportService: ClientUpdateReportService,
 ) {
     /**
      * 检查更新。
@@ -45,5 +53,16 @@ class ClientUpdatesController(
             tenantId = tenantId,
             deviceId = deviceId,
         )
+
+    /**
+     * 客户端更新状态上报。
+     *
+     * 客户端在执行更新过程中调用此接口上报进度/结果（downloaded / installed / failed）。
+     */
+    @PostMapping("/report")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun report(@Valid @RequestBody request: ClientUpdateReportRequest) {
+        clientUpdateReportService.save(request)
+    }
 }
 

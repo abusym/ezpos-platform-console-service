@@ -10,6 +10,7 @@ import net.ezpos.console.feature.release.model.ReleaseRolloutType
 import net.ezpos.console.feature.release.model.ReleaseStatus
 import net.ezpos.console.feature.release.repository.ReleaseRepository
 import org.junit.jupiter.api.assertThrows
+import java.time.OffsetDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -121,13 +122,52 @@ class ClientUpdateServiceTest {
     }
 
     @Test
-    fun `throws DataIntegrityException when artifactUrl is not set`() {
+    fun `throws DataIntegrityException when neither artifactUrl nor artifactKey is set`() {
+        val release = publishedRelease(artifactUrl = "").apply { artifactKey = null }
         every { appService.requireEnabled("app1") } returns enabledApp()
-        every { releaseRepo.findByApplicationCodeAndPlatformAndStatus("app1", "android", ReleaseStatus.PUBLISHED) } returns
-            publishedRelease(artifactUrl = "")
+        every { releaseRepo.findByApplicationCodeAndPlatformAndStatus("app1", "android", ReleaseStatus.PUBLISHED) } returns release
 
         assertThrows<DataIntegrityException> {
             service.check("app1", "android", "1.0.0", "tenant-1", null)
         }
+    }
+
+    @Test
+    fun `falls back to artifactKey when artifactUrl is blank`() {
+        val release = publishedRelease(artifactUrl = "").apply { artifactKey = "releases/v2.zip" }
+        every { appService.requireEnabled("app1") } returns enabledApp()
+        every { releaseRepo.findByApplicationCodeAndPlatformAndStatus("app1", "android", ReleaseStatus.PUBLISHED) } returns release
+
+        val result = service.check("app1", "android", "1.0.0", "tenant-1", null)
+        assertTrue(result.updateAvailable)
+        assertEquals("releases/v2.zip", result.download?.url)
+    }
+
+    @Test
+    fun `forceAfterAt in the past makes isForced true even if release isForced is false`() {
+        val release = publishedRelease().apply {
+            isForced = false
+            forceAfterAt = OffsetDateTime.now().minusDays(1)
+        }
+        every { appService.requireEnabled("app1") } returns enabledApp()
+        every { releaseRepo.findByApplicationCodeAndPlatformAndStatus("app1", "android", ReleaseStatus.PUBLISHED) } returns release
+
+        val result = service.check("app1", "android", "1.0.0", "tenant-1", null)
+        assertTrue(result.updateAvailable)
+        assertTrue(result.isForced == true)
+    }
+
+    @Test
+    fun `forceAfterAt in the future keeps isForced following release isForced`() {
+        val release = publishedRelease().apply {
+            isForced = false
+            forceAfterAt = OffsetDateTime.now().plusDays(1)
+        }
+        every { appService.requireEnabled("app1") } returns enabledApp()
+        every { releaseRepo.findByApplicationCodeAndPlatformAndStatus("app1", "android", ReleaseStatus.PUBLISHED) } returns release
+
+        val result = service.check("app1", "android", "1.0.0", "tenant-1", null)
+        assertTrue(result.updateAvailable)
+        assertFalse(result.isForced == true)
     }
 }

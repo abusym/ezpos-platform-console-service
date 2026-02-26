@@ -49,4 +49,8 @@ class AuthService(
         val user = repo.findById(principal.id).orElse(null)
         return userInfoMapper.fromPrincipalAndUser(principal, user)
     }
+
+    fun logout(token: String) {
+        tokenService.revoke(token)
+    }
 }
