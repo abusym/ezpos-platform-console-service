@@ -1,0 +1,23 @@
+# 生产环境配置
+# 继承 application.yaml 的公共配置，这里只配置生产环境特有的部分
+
+logging:
+  level:
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
+    org.hibernate.type.descriptor: WARN
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate  # 生产环境建议使用 validate
+
+  sql:
+    init:
+      mode: never  # 生产环境不执行初始化脚本
