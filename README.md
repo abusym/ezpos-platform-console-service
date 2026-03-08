@@ -193,3 +193,10 @@ volumes:
   postgres-data:
   redis-data:
 ```
+
+## 接口测试
+
+项目使用 **Claude Code + Postman MCP** 维护 Postman 接口集合。当接口有变更时，通过以下步骤同步更新：
+
+1. 在 Claude Code 中执行 `/mcp`，确认 Postman MCP 状态为已连接（首次使用需完成 OAuth 认证）
+2. 告诉 Claude 将最新接口同步到 Postman，Claude 会自动读取 Controller 代码并通过 Postman MCP 创建/更新集合
