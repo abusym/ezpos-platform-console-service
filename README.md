@@ -194,7 +194,7 @@ volumes:
   redis-data:
 ```
 
-## 接口测试
+## Postman接口测试
 
 项目使用 **Claude Code + Postman MCP** 维护 Postman 接口集合。当接口有变更时，通过以下步骤同步更新：
 
