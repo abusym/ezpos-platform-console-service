@@ -165,3 +165,31 @@ Windows（PowerShell/CMD）：
 - Release（版本发布）模块设计：[`docs/modules/release/README.md`](docs/modules/release/README.md)
 - Web 错误响应（ProblemDetail）说明：[`docs/web/README.md`](docs/web/README.md)
 
+
+## 本地开发环境docker一键启动所需服务
+docker-compose.yml
+```yml
+services:
+  postgres:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ezpos
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass root
+    volumes:
+      - redis-data:/data
+
+volumes:
+  postgres-data:
+  redis-data:
+```
